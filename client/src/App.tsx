@@ -23,6 +23,7 @@ type Room = {
 };
 
 const WORD_COUNTS = [10, 25, 50, 100];
+const COUNTDOWN_OPTIONS = [5, 10, 15, 30];
 
 export default function App() {
   const [connected, setConnected] = useState(false);
@@ -32,6 +33,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [typedText, setTypedText] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [startDelay, setStartDelay] = useState(10);
 
   const typingRef = useRef<HTMLTextAreaElement>(null);
 
@@ -146,7 +148,7 @@ export default function App() {
   function startRace() {
     if (!socket.connected || !isHost) return;
     setError("");
-    socket.emit("race:start");
+    socket.emit("race:start", startDelay);
   }
 
   function prepareRematch() {
@@ -275,6 +277,37 @@ export default function App() {
                 <p className="badge">
                   {room.wordCount} words · Selected by the host
                 </p>
+              )}
+
+              {isHost && (
+                <>
+                  <p id="delay-label" className="section-label">
+                    START COUNTDOWN
+                  </p>
+
+                  <div
+                    role="group"
+                    aria-labelledby="delay-label"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                      gap: "8px",
+                    }}
+                  >
+                    {COUNTDOWN_OPTIONS.map((seconds) => (
+                      <button
+                        key={seconds}
+                        type="button"
+                        className={startDelay === seconds ? "" : "secondary"}
+                        aria-pressed={startDelay === seconds}
+                        onClick={() => setStartDelay(seconds)}
+                        style={{ marginTop: 0, padding: "12px 4px" }}
+                      >
+                        {seconds}s
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
 
               <p className="muted">
