@@ -18,6 +18,7 @@ type Room = {
   wordCount: number;
   text: string;
   startsAt: number;
+  serverTime: number;
   winnerId: string | null;
   winnerName: string | null;
 };
@@ -36,6 +37,7 @@ export default function App() {
   const [startDelay, setStartDelay] = useState(10);
 
   const typingRef = useRef<HTMLTextAreaElement>(null);
+  const clockOffset = useRef(0);
 
   useEffect(() => {
     function onConnect() {
@@ -57,7 +59,8 @@ export default function App() {
 
     function onRoomUpdated(updatedRoom: Room) {
       setRoom(updatedRoom);
-      setNow(Date.now());
+      clockOffset.current = updatedRoom.serverTime - Date.now();
+      setNow(Date.now() + clockOffset.current);
       setError("");
 
       if (updatedRoom.status === "waiting") {
@@ -90,7 +93,7 @@ export default function App() {
     if (room?.status !== "racing") return;
 
     const timer = window.setInterval(() => {
-      setNow(Date.now());
+      setNow(Date.now() + clockOffset.current);
     }, 100);
 
     return () => window.clearInterval(timer);
@@ -115,10 +118,10 @@ export default function App() {
   const displayedPlayers = room
     ? finished
       ? [...room.players].sort((a, b) => {
-          if (a.id === room.winnerId) return -1;
-          if (b.id === room.winnerId) return 1;
-          return b.progress - a.progress || b.wpm - a.wpm;
-        })
+        if (a.id === room.winnerId) return -1;
+        if (b.id === room.winnerId) return 1;
+        return b.progress - a.progress || b.wpm - a.wpm;
+      })
       : room.players
     : [];
 

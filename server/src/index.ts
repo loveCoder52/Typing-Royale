@@ -42,6 +42,7 @@ const io = new Server(httpServer, {
 
 const rooms = new Map<string, Room>();
 const ALLOWED_WORD_COUNTS = [10, 25, 50, 100];
+const ALLOWED_START_DELAYS = [5, 10, 15, 30];
 
 const WORD_BANK = `
   the be of and a to in he have it
@@ -108,6 +109,7 @@ function broadcastRoom(room: Room) {
     wordCount: room.wordCount,
     text: room.text,
     startsAt: room.startsAt,
+    serverTime: Date.now(),
     winnerId: room.winnerId,
     winnerName: room.winnerName,
 
@@ -202,8 +204,8 @@ function trackAccuracy(player: Player, nextInput: string, target: string) {
     player.totalAttempts === 0
       ? 100
       : Math.round(
-          (player.correctAttempts / player.totalAttempts) * 1000,
-        ) / 10;
+        (player.correctAttempts / player.totalAttempts) * 1000,
+      ) / 10;
 }
 
 io.on("connection", (socket) => {
@@ -322,7 +324,7 @@ io.on("connection", (socket) => {
     broadcastRoom(room);
   });
 
-  socket.on("race:start", () => {
+  socket.on("race:start", (rawDelay: unknown) => {
     const room = getCurrentRoom();
 
     if (!room) return;
@@ -349,7 +351,12 @@ io.on("connection", (socket) => {
     room.winnerId = null;
     room.winnerName = null;
     room.status = "racing";
-    room.startsAt = Date.now() + 3000;
+    const delay =
+      typeof rawDelay === "number" && ALLOWED_START_DELAYS.includes(rawDelay)
+        ? rawDelay
+        : 10;
+
+    room.startsAt = Date.now() + delay * 1000;
 
     broadcastRoom(room);
   });
