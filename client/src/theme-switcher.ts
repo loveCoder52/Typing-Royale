@@ -121,7 +121,7 @@ function mount() {
     panel.append(button);
   });
 
-  toggle.addEventListener("click", () => setOpen(panel.hidden));
+  toggle.addEventListener("click", () => setOpen(Boolean(panel.hidden)));
 
   document.addEventListener("click", (event) => {
     if (!wrapper.contains(event.target as Node)) setOpen(false);
