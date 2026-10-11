@@ -1,5 +1,7 @@
 import { io } from "socket.io-client";
 
-export const socket = io(window.location.origin, {
+const URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+
+export const socket = io(URL, {
   autoConnect: false,
 });
